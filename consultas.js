@@ -23,7 +23,7 @@ const insertar = async (datos) => {
 const consultar = async () => {
 
     const result = await pool.query("SELECT * FROM usuarios");
-    return result;
+    return result.rows;
 };
 
 const editar = async (id, datos) => {
@@ -83,13 +83,16 @@ const nuevaTransferencia = async (datos) => {
 const consultaTransferencia = async () => {
     try {
         await pool.query("BEGIN");
-        const result = await pool.query(`SELECT A.fecha, b.nombre as emisor, C.nombre as receptor, A.monto 
-                                        FROM transferencias as A 
-                                        JOIN usuarios as B ON (A.emisor = B.id)
-                                        JOIN usuarios as C ON (A.receptor = C.id)`);
-
+        const consulta = {
+            text: `SELECT A.fecha, b.nombre as emisor, C.nombre as receptor, A.monto 
+                                            FROM transferencias as A 
+                                            JOIN usuarios as B ON (A.emisor = B.id)
+                                            JOIN usuarios as C ON (A.receptor = C.id)`,
+            rowMode: 'array'                                
+        };
+        const result = await pool.query(consulta);
         await pool.query("COMMIT");
-        return result;
+        return result.rows;
     } catch (error) {
         await pool.query("ROLLBACK");
         // Capturar los posibles errores en todas las consultas e imprimirlos por consola.
